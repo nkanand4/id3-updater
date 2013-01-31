@@ -42,7 +42,7 @@ function YOGI(file) {
 							me.guesses = json.results;
 							me.handleMultiInfo();
 						}else {
-							fs.writeFileSync('unable-locate-info.log', me.file);
+							fs.appendFileSync('unable-locate-info.log', me.file);
 						}
 					}
 				});
@@ -78,12 +78,9 @@ function YOGI(file) {
 						query = '',
 						filter = function(str) {
 							str = str.replace(/-/g,' ');
-							str = str.replace(/youtube|dailymotion/i,'');
-							str = str.replace(/song/i,'');
-							str = str.replace(/free/i,'');
-							str = str.replace(/hq/i,'');
-							str = str.replace(/mp3/i,'');
-							str = str.replace(/download/i,'');
+							str = str.replace(/youtube|dailymotion/ig,'');
+							str = str.replace(/free|song|lyrics/ig,'');
+							str = str.replace(/hq|mp3|download/ig,'');
 							str = str.replace(/\s{2,}/g,' ');
 							return str;
 						};
