@@ -1,0 +1,12 @@
+{
+  "name": "id3Updater",
+  "description": "Music metadata library for node, using pure Javascript.",
+  "version": "0.1.0",
+  "author": "Nitesh Anand",
+  "dependencies": {
+    "musicmetadata": "0.2.3"
+  },
+  "engines": {
+    "node": "*"
+  }
+}
