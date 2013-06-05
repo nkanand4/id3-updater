@@ -7,6 +7,6 @@
     "musicmetadata": "0.2.3"
   },
   "engines": {
-    "node": "*"
+    "node": "0.10.10"
   }
 }
