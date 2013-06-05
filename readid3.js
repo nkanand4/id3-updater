@@ -1,3 +1,6 @@
+/*
+ * Unit module that reads the metadata(id3) of an mp3/song file.
+ */
 var fs = require('fs');
 var mm = require('musicmetadata');
 
@@ -10,7 +13,6 @@ var parser = new mm(fs.createReadStream(function() {
 		return 'Humma.mp3';
 	}
 }()));
-parser.update({info: 'a', otherinfo: 'b'});
 parser.on('metadata', function (result) {
   console.log(result);
 });

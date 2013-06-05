@@ -49,8 +49,9 @@ public class Utils {
 			fin.read(fileContent);
 			ImageData aw = new ImageData(fileContent, "image/jpg", "Artwork", 0);
 			artwork.add(aw);
+			fin.close();
 		} catch(FileNotFoundException e) {
-			System.out.println("File not found.");
+			System.out.println("Artwork File not found.");
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			System.out.println("Unsupported encoding found.");
@@ -64,7 +65,7 @@ public class Utils {
 	public void createArtwork(byte[] artwork) {
 		try{
 			  // Create file 
-			FileOutputStream fos = new FileOutputStream("/Users/nanand1/Developer/my-dev-arena/id3-updater/abc.jpg");
+			FileOutputStream fos = new FileOutputStream("/tmp/abc.jpg");
 			fos.write(artwork);
 
 		  //Close the output stream
