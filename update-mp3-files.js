@@ -4,15 +4,22 @@ var spawn = require('child_process').spawn,
 	mm = require('musicmetadata'),
 	http = require('http'),
 	search    = spawn('find', ['.', '-name', '*.mp3']),
-	cwd   = process.cwd();
+	cwd   = process.cwd(),
+	jarFile = '/homde/nitesh/Developer/workspace/nodejs/id3-updater/id3-editor.jar';
 
 
 
 search.stdout.on('data', function (data) {
   var i, songs = data.toString().replace(/\n+$/,'').split("\n"), stream;
-  for(i=0; i<songs.length; i++) {
-  	new YOGI(songs[i]);
-  }
+  fs.exists(jarFile, function(exists) {
+    if(exists) {
+      for(i=0; i<songs.length; i++) {
+	new YOGI(songs[i]);
+      } 
+    }else {
+      console.log('\nPlease resolve the path of id3-editor.jar file. This file is required to update your mp3 files. Currently its set to "' + jarFile + '" in update-mp3-files.js. Once done, please try again, Thank you.\n');
+    }
+  });
 });
 
 function YOGI(file) {
@@ -146,7 +153,8 @@ function YOGI(file) {
 					var update;
 					artwork.end();
 					cmdarg.push(wrapQuotes(me.artwork));
-					update = cmd(['java', '-jar', '/Users/nanand1/Developer/my-dev-arena/id3-updater/id3-editor.jar'].concat(cmdarg).join(' '));
+					update = cmd(['java', '-jar', jarFile].concat(cmdarg).join(' '));
+					//console.log('Executing ', update);
 					update.stdout.on('data', function(u) {
 						console.log('File update says', u);
 						cmd('rm -rf ' + me.artwork);

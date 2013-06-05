@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 
 import org.cmc.music.common.ID3ReadException;
 import org.cmc.music.common.ID3WriteException;
@@ -13,6 +14,53 @@ import org.cmc.music.metadata.MusicMetadataSet;
 public class ID3Info {
 	
 	public Utils util = new Utils();
+	
+	public void update(HashMap<String, String> info) {
+		try {
+			
+			String filepath = info.get("filepath");
+			int genre = util.getGenreCode(info.get("genre"));
+			int year = info.get("year") == "" || info.get("year") == null ? 1900: Integer.parseInt(info.get("year"));
+			String title = info.get("title");
+			String artist = info.get("artist");
+			String album = info.get("album");
+			int track = info.get("track") == "" || info.get("track") == null ? 1 : Integer.parseInt(info.get("track"));
+			String artwork = info.get("artwork");
+			File src = new File(filepath);
+			MusicMetadataSet src_set =  new MyID3().read(src);				
+			MusicMetadata metadata = (MusicMetadata) src_set.getSimplified();
+			if(title != null)
+				metadata.setSongTitle(title);
+			if(artist != null)
+				metadata.setArtist(artist);
+			if(album != null)
+				metadata.setAlbum(album);
+			metadata.setYear(year);
+			metadata.setTrackNumberNumeric(track);
+			if(genre > -1){
+				metadata.setGenreID(genre);
+			}
+			//me.util.createArtwork(((ImageData)metadata.getPictures().get(0)).imageData);
+			if(artwork != null)
+				metadata.setPictures(util.getArtwork(artwork));
+			new MyID3().update(src, src_set, metadata);
+			System.out.println("Updated " + info.get("filepath") + " successfully.");
+		}catch(FileNotFoundException e) {
+			System.out.println("File not found at specified path: "+info.get("filepath"));
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Unsupported encoding found.");
+		} catch (ID3WriteException e) {
+			// TODO Auto-generated catch block
+			System.out.println("ID3 update unsuccessful.");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("ID3 update unsuccessful because of IO.");
+		} catch (ID3ReadException e) {
+			// TODO Auto-generated catch block
+			System.out.println("ID3 reading failed.");
+		}
+	} 
 	
 	public static void main(String [] args) {
 		/*
@@ -27,36 +75,16 @@ public class ID3Info {
 		 * array[7] = picture
 		 */
 		ID3Info me = new ID3Info();
-		try {
-			File src = new File(args[0]);
-			MusicMetadataSet src_set =  new MyID3().read(src);
-			MusicMetadata metadata = (MusicMetadata) src_set.getSimplified();
-			metadata.setSongTitle(args[1]);
-			metadata.setArtist(args[2]);
-			metadata.setAlbum(args[3]);
-			metadata.setYear(Integer.parseInt(args[4]));
-			metadata.setTrackNumberNumeric(Integer.parseInt(args[5]));
-			metadata.setGenreID(me.util.getGenreCode(args[6]));
-			metadata.setPictures(me.util.getArtwork(args[7]));
-
-			//me.util.createArtwork(((ImageData)metadata.getPictures().get(0)).imageData);  
-
-			new MyID3().update(src, src_set, metadata);
-			System.out.println("Updated " + args[0] + " successfully.");
-		}catch(FileNotFoundException e) {
-			System.out.println("File not found.");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			System.out.println("Unsupported encoding found.");
-		} catch (ID3WriteException e) {
-			// TODO Auto-generated catch block
-			System.out.println("ID3 update unsuccessful.");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			System.out.println("ID3 update unsuccessful because of IO.");
-		} catch (ID3ReadException e) {
-			// TODO Auto-generated catch block
-			System.out.println("ID3 reading failed.");
+		String[] keys = {"filepath", "title", "artist",
+							"album", "year", "track", "genre", "artwork"};
+		HashMap<String, String> info = new HashMap<String, String>();
+		for(int i = 0; i < keys.length; i++) {
+			if(i < args.length) {
+				info.put(keys[i], args[i]);
+			}else {
+				info.put(keys[i], "");
+			}
 		}
+		me.update(info);
 	}
 }
