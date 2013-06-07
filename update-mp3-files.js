@@ -1,11 +1,13 @@
 var spawn = require('child_process').spawn,
 	cmd = require('child_process').exec,
 	fs = require('fs'),
+	url = require('url'),
+	path = require('path'),
 	mm = require('musicmetadata'),
 	http = require('http'),
 	search    = spawn('find', ['.', '-name', '*.mp3']),
 	cwd   = process.cwd(),
-	jarFile = '/homde/nitesh/Developer/workspace/nodejs/id3-updater/id3-editor.jar';
+	jarFile = '/home/nitesh/Developer/workspace/nodejs/id3-updater/id3-editor.jar';
 
 
 
@@ -109,11 +111,11 @@ function YOGI(file) {
 		me.handleMultiInfo = function () {
 			var i = 0, cmdarg = [],
 				hostinfo = [],
-				host, iResp = me.guesses,
+				iResp = me.guesses,
 			wrapQuotes = function(str) {
 				return '"'+str+'"';
 			},
-			search, album, index = 0;
+			album, index = 0;
 			cmdarg.push(wrapQuotes(me.file));
 			if(me.album) {
 				for(i=0; i<iResp.length; i++) {
@@ -136,15 +138,12 @@ function YOGI(file) {
 			}())));
 			cmdarg.push(wrapQuotes(me.guesses[index].trackNumber));
 			cmdarg.push(wrapQuotes(me.guesses[index].primaryGenreName));
-			hostinfo = me.guesses[index].artworkUrl100.replace(/http:\/\//, '').split(/\//);
-			host = hostinfo[0];
-			hostinfo.shift();
-			http.request({
-				host: host,
-				path: '/'+hostinfo.join('/')
-			}, function(res) {
+			hostinfo = url.parse(me.guesses[index].artworkUrl100);
+			http.request(hostinfo, function(res) {
 				var artwork;
-				me.artwork = (me.file).replace(/\/\./g,'').replace(/\s/g,'')+'.jpg';
+				//me.artwork = (me.file).replace(/\/\./g,'').replace(/\s/g,'')+'.jpg';
+				me.artwork = '/tmp/'+path.basename(me.file)+'.jpg';
+				console.log('Artwork is created '+ me.artwork);
 				artwork = fs.createWriteStream(me.artwork, {'flags': 'a'});
 				res.on('data', function (chunk) {
 					artwork.write(chunk, encoding='binary');
