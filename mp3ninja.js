@@ -122,10 +122,11 @@ YOGI = function(file) {
 			}())));
 			cmdarg.push(wrapQuotes(me.guesses[index].trackNumber));
 			cmdarg.push(wrapQuotes(me.guesses[index].primaryGenreName));
-			me.guesses[index].artworkUrl100 = me.guesses[index].artworkUrl100.replace(/100x100/,'600x600')
+			me.guesses[index].artworkUrl100 = me.guesses[index].artworkUrl100.replace(/100x100/,'600x600');
 			hostinfo = url.parse(me.guesses[index].artworkUrl100);
 			http.request(hostinfo, function(res) {
 				var artwork;
+				//TODO: Add capability to create /tmp, if not exists
 				me.artwork = '/tmp/'+path.basename(me.file)+'.jpg';
 				artwork = fs.createWriteStream(me.artwork, {'flags': 'a'});
 				res.on('data', function (chunk) {
@@ -135,13 +136,14 @@ YOGI = function(file) {
 					var update;
 					artwork.end();
 					cmdarg.push(wrapQuotes(me.artwork));
+					// TODO: check java capabilities
 					update = cmd(['java', '-jar', jarFile].concat(cmdarg).join(' '));
 					update.on('close', function(u) {
 						console.log('File update says: ', me.file, ':: Exit code:' , u);
 					});
 				});
 			}).end();
-		}
+		};
 
 
 	try {
@@ -184,6 +186,6 @@ YOGI.prototype.setTitle = function(title) {
 	// remove .mp3 extension
 	title = title.replace(/.mp3$/, '');
 	this.title = title;
-}
+};
 
 module.exports.YOGI = YOGI;

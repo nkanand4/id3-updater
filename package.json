@@ -5,7 +5,7 @@
   "author": "Nitesh Anand",
   "dependencies": {
     "musicmetadata": "0.2.3",
-    "findit": "0.1.2"
+    "walkdir": "0.0.7"
   },
   "engines": {
     "node": "0.10.10"
