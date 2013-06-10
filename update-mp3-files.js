@@ -16,7 +16,7 @@ search.stdout.on('data', function (data) {
   fs.exists(jarFile, function(exists) {
     if(exists) {
       for(i=0; i<songs.length; i++) {
-	new YOGI(songs[i]);
+    	  new YOGI(songs[i]);
       } 
     }else {
       console.log('\nPlease resolve the path of id3-editor.jar file. This file is required to update your mp3 files. Currently its set to "' + jarFile + '" in update-mp3-files.js. Once done, please try again, Thank you.\n');
@@ -26,7 +26,7 @@ search.stdout.on('data', function (data) {
 
 function YOGI(file) {
 	var me = this;
-		me.title = file.replace(/.mp3$/i, '').replace(/.*\//, '');
+		me.setTitle(path.basename(file));
 		me.file = cwd + '/' +file;
 		
 		me.askItunes = function(fail) {
@@ -42,7 +42,7 @@ function YOGI(file) {
 					str += chunk;
 				});
 				response.on('end', function() {
-					var json = JSON.parse(str)
+					var json = JSON.parse(str),
 						replies = json.resultCount;
 					if(replies == 0 && fail === undefined) {
 						me.askGoogle();
@@ -72,7 +72,8 @@ function YOGI(file) {
 						str += chunk;
 					});
 					response.on('end', function() {
-						var replies = JSON.parse(str).responseData.results;
+						var json = JSON.parse(str),
+							replies = json.responseData && json.responseData.results ? json.responseData.results : [];
 						if(replies.length == 0) {
 							console.log('Google does not know about', this.path);
 						}else {
@@ -113,6 +114,7 @@ function YOGI(file) {
 				hostinfo = [],
 				iResp = me.guesses,
 			wrapQuotes = function(str) {
+				str = typeof str === 'string' ? str.replace(/"/g, '') : str;
 				return '"'+str+'"';
 			},
 			album, index = 0;
@@ -138,12 +140,12 @@ function YOGI(file) {
 			}())));
 			cmdarg.push(wrapQuotes(me.guesses[index].trackNumber));
 			cmdarg.push(wrapQuotes(me.guesses[index].primaryGenreName));
+			me.guesses[index].artworkUrl100 = me.guesses[index].artworkUrl100.replace(/100x100/,'600x600')
 			hostinfo = url.parse(me.guesses[index].artworkUrl100);
 			http.request(hostinfo, function(res) {
 				var artwork;
 				//me.artwork = (me.file).replace(/\/\./g,'').replace(/\s/g,'')+'.jpg';
 				me.artwork = '/tmp/'+path.basename(me.file)+'.jpg';
-				console.log('Artwork is created '+ me.artwork);
 				artwork = fs.createWriteStream(me.artwork, {'flags': 'a'});
 				res.on('data', function (chunk) {
 					artwork.write(chunk, encoding='binary');
@@ -166,15 +168,41 @@ function YOGI(file) {
 
 
 	try {
-		stream = fs.createReadStream(cwd+'/'+file);
-		new mm(stream).on('metadata', function (result) {
-			if(process.argv.length == 2) {
-				me.title = result.title || me.title;
-			}
-			me.album = result.album.replace(/^\s+|\s+$/g,'');
-		  	me.askItunes();
-		});
+		if(process.argv.length < 3) {
+			// assume filename is the title of the song
+			me.askItunes();
+		}else {
+			// read the id3 for the title of the song
+			// if id3 does not have title info, fall back
+			// to filename as the title of the songs.
+			stream = fs.createReadStream(me.file);
+			new mm(stream).on('metadata', function (result) {
+				if(process.argv.length == 2) {
+					me.title = result.title || me.title;
+				}
+				me.album = result.album.replace(/^\s+|\s+$/g,'');
+			  	me.askItunes();
+			});
+		}
+		
+		
   	}catch(e) {
   		console.log('Error here', e);
   	}
+}
+
+YOGI.prototype.setTitle = function(title) {
+	// remove any preceding digits. usually songs do not start with numbers. 
+	// even though it did, smart search will resolve it.
+	title = title.replace(/^\d+\s/g, '');
+	// remove any dash separated string. usually its junk from different sites
+	// where the song has been downloaded from
+	title = title.replace(/\s?-\s+?(.*)/g, '');
+	// remove the any underscores (yet another junk. why would 
+	// song name have underscore???)
+	title = title.replace(/_+/g, ' ');
+	title = title.replace(/\s+/g, ' ');
+	// remove .mp3 extension
+	title = title.replace(/.mp3$/, '');
+	this.title = title;
 }
