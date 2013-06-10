@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "author": "Nitesh Anand",
   "dependencies": {
-    "musicmetadata": "0.2.3"
+    "musicmetadata": "0.2.3",
+    "findit": "0.1.2"
   },
   "engines": {
     "node": "0.10.10"
