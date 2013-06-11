@@ -8,7 +8,7 @@ npm install
 ```
 The above command will resolve depenedencies. This will be required only to run once.
 ```js
-node update-mp3-files.js /path/to/the/music/folder
+node update-mp3-files.js /path/to/the/music/folder-or-file
 ```
 The application searches for the mp3 files in the provided music folder.
 Prerequisite:
