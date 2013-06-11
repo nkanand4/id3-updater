@@ -5,6 +5,8 @@ var cmd = require('child_process').exec,
 	http = require('http'),
 	fs = require('fs'),
 	jarFile = '',
+	out = require('./log4js'),
+	artworkDir = '',
 	
 YOGI = function(file) {
 	var me = this;
@@ -19,7 +21,7 @@ YOGI = function(file) {
 			},
 			handleItunesResponse = function(response) {
 				var str = '';
-				console.log('Asking itunes about ', me.title);
+				out.log.debug('Asking itunes about ', me.title);
 				response.on('data', function (chunk) {
 					str += chunk;
 				});
@@ -49,7 +51,7 @@ YOGI = function(file) {
 				},
 				handleGoogleResponse = function(response) {
 					var str = '';
-					console.log('Asked google '+this.path);
+					out.log('Asked google '+this.path);
 					response.on('data', function (chunk) {
 						str += chunk;
 					});
@@ -57,7 +59,7 @@ YOGI = function(file) {
 						var json = JSON.parse(str),
 							replies = json.responseData && json.responseData.results ? json.responseData.results : [];
 						if(replies.length == 0) {
-							console.log('Google does not know about', this.path);
+							out.log('Google does not know about', this.path);
 						}else {
 							//makeBetterGuess(replies);
 							me.title = makeBetterGuess(replies).replace(/\s+?\(.*/, '');
@@ -127,7 +129,8 @@ YOGI = function(file) {
 			http.request(hostinfo, function(res) {
 				var artwork;
 				//TODO: Add capability to create /tmp, if not exists
-				me.artwork = '/tmp/'+path.basename(me.file)+'.jpg';
+				out.log.debug('tmp dir is ', artworkDir + path.sep +path.basename(me.file)+'.jpg');
+				me.artwork = artworkDir + path.sep +path.basename(me.file)+'.jpg';
 				artwork = fs.createWriteStream(me.artwork, {'flags': 'a'});
 				res.on('data', function (chunk) {
 					artwork.write(chunk, encoding='binary');
@@ -139,7 +142,7 @@ YOGI = function(file) {
 					// TODO: check java capabilities
 					update = cmd(['java', '-jar', jarFile].concat(cmdarg).join(' '));
 					update.on('close', function(u) {
-						console.log('File update says: ', me.file, ':: Exit code:' , u);
+						out.log.info('Updating', me.file, u === 0 ? 'succeeded' : 'failed');
 					});
 				});
 			}).end();
@@ -147,7 +150,8 @@ YOGI = function(file) {
 
 
 	try {
-		if(process.argv.length < 3) {
+		me.askItunes();
+		/*if(true || process.argv.length < 3) {
 			// assume filename is the title of the song
 			me.askItunes();
 		}else {
@@ -162,15 +166,11 @@ YOGI = function(file) {
 				me.album = result.album.replace(/^\s+|\s+$/g,'');
 			  	me.askItunes();
 			});
-		}
-		
-		
+		}*/
   	}catch(e) {
-  		console.log('Error here', e);
+  		out.log.debug('Error here', e);
   	}
 };
-
-jarFile = path.dirname(process.argv[1]) + path.sep +'id3-editor.jar';
 
 YOGI.prototype.setTitle = function(title) {
 	// remove any preceding digits. usually songs do not start with numbers. 
@@ -187,5 +187,13 @@ YOGI.prototype.setTitle = function(title) {
 	title = title.replace(/.mp3$/, '');
 	this.title = title;
 };
+
+YOGI.setjar = function(path) {
+	jarFile = path;
+};
+
+YOGI.setTMPDir = function(path) {
+	artworkDir = path;
+}
 
 module.exports.YOGI = YOGI;
