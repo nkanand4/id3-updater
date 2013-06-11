@@ -35,6 +35,7 @@ YOGI = function(file) {
 							me.guesses = json.results;
 							me.handleMultiInfo();
 						}else {
+							out.log.debug('Could not locate info for ', me.file);
 							fs.appendFileSync('unable-locate-info.log', me.file);
 						}
 					}
@@ -51,7 +52,7 @@ YOGI = function(file) {
 				},
 				handleGoogleResponse = function(response) {
 					var str = '';
-					out.log('Asked google '+this.path);
+					out.log.debug('Asked google '+this.path);
 					response.on('data', function (chunk) {
 						str += chunk;
 					});
@@ -59,7 +60,7 @@ YOGI = function(file) {
 						var json = JSON.parse(str),
 							replies = json.responseData && json.responseData.results ? json.responseData.results : [];
 						if(replies.length == 0) {
-							out.log('Google does not know about', this.path);
+							out.log.debug('Google does not know about', this.path);
 						}else {
 							//makeBetterGuess(replies);
 							me.title = makeBetterGuess(replies).replace(/\s+?\(.*/, '');
@@ -194,6 +195,6 @@ YOGI.setjar = function(path) {
 
 YOGI.setTMPDir = function(path) {
 	artworkDir = path;
-}
+};
 
 module.exports.YOGI = YOGI;
