@@ -8,6 +8,7 @@ var fs = require('fs'),
 	path = require('path'),
 	dir = '';
 	
+//TODO add network check dependency.
 /**
  * Exposes the files to mp3Ninja.
  */	

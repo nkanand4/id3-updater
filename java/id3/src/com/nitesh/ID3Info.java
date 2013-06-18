@@ -63,28 +63,36 @@ public class ID3Info {
 	} 
 	
 	public static void main(String [] args) {
-		/*
-		 * convention to follow
-		 * array[0] = file path
-		 * array[1] = title
-		 * array[2] = artist
-		 * array[3] = album
-		 * array[4] = year
-		 * array[5] = track
-		 * array[6] = genre
-		 * array[7] = picture
-		 */
-		ID3Info me = new ID3Info();
-		String[] keys = {"filepath", "title", "artist",
-							"album", "year", "track", "genre", "artwork"};
-		HashMap<String, String> info = new HashMap<String, String>();
-		for(int i = 0; i < keys.length; i++) {
-			if(i < args.length) {
-				info.put(keys[i], args[i]);
-			}else {
-				info.put(keys[i], "");
+		if(args.length > 0) {
+			if(args[0].equals("update")) {
+				/*
+				 * convention to follow
+				 * array[0] = file path
+				 * array[1] = title
+				 * array[2] = artist
+				 * array[3] = album
+				 * array[4] = year
+				 * array[5] = track
+				 * array[6] = genre
+				 * array[7] = picture
+				 */
+				ID3Info me = new ID3Info();
+				String[] keys = {"filepath", "title", "artist",
+						"album", "year", "track", "genre", "artwork"};
+				HashMap<String, String> info = new HashMap<String, String>();
+				for(int i = 0; i < keys.length; i++) {
+					if(i < args.length-1) {
+						info.put(keys[i], args[i+1]);
+					}else {
+						info.put(keys[i], "");
+					}
+				}
+				me.update(info);
+			}else if(args[0].equals("duration")) {
+				new EvaluateMP3SPI().read(args[1]);
 			}
+		}else {
+			System.out.println("Need at least one argument.");
 		}
-		me.update(info);
 	}
 }

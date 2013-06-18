@@ -72,11 +72,12 @@ YOGI = function(file) {
 					var i=0, x=0, ww = {}, tmp,
 						query = '',
 						filter = function(str) {
-							str = str.replace(/-/g,' ');
-							str = str.replace(/youtube|dailymotion/ig,'');
-							str = str.replace(/free|song|lyrics/ig,'');
-							str = str.replace(/hq|mp3|download/ig,'');
-							str = str.replace(/\s{2,}/g,' ');
+						str = str.replace(/-/g,' ');
+						str = str.replace(/youtube|dailymotion/ig,'');
+						str = str.replace(/free|song|lyrics/ig,'');
+						str = str.replace(/mp3|download/ig,'');
+						str = str.replace(/\bhq\b/ig,'');
+						str = str.replace(/\s{2,}/g,' ');
 							return str;
 						};
 					for(; i<results.length; i++) {
@@ -137,11 +138,14 @@ YOGI = function(file) {
 					artwork.write(chunk, encoding='binary');
 				});
 				res.on('end', function () {
-					var update;
+					var update,
+						javaCmd = '';
 					artwork.end();
 					cmdarg.push(wrapQuotes(me.artwork));
 					// TODO: check java capabilities
-					update = cmd(['java', '-jar', jarFile].concat(cmdarg).join(' '));
+					javaCmd = ['java', '-jar', jarFile].concat(cmdarg).join(' ');
+					out.log.debug('Executing:', javaCmd);
+					update = cmd(javaCmd);
 					update.on('close', function(u) {
 						out.log.info('Updating', me.file, u === 0 ? 'succeeded' : 'failed');
 					});
