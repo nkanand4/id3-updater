@@ -6,7 +6,8 @@ var fs = require('fs'),
 	out = require('./log4js'),
 	deferred = new bp.construct(),
 	path = require('path'),
-	dir = '';
+	dir = '',
+	versionedJAR = 'id3-helper-0.0.2.jar';
 	
 //TODO add network check dependency.
 /**
@@ -79,7 +80,7 @@ function checkMP3Directory() {
  * or not.
  */
 function checkJarFile() {
-	var jarFile = path.dirname(process.argv[1]) + path.sep +'id3-editor.jar';
+	var jarFile = path.dirname(process.argv[1]) + path.sep + versionedJAR;
 	fs.exists(jarFile, function(exists) {
 		if(exists) {
 			out.log.debug('jar file located.');

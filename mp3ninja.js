@@ -6,6 +6,7 @@ var cmd = require('child_process').exec,
 	fs = require('fs'),
 	jarFile = '',
 	out = require('./log4js'),
+	itunes = require('./itunes'),
 	artworkDir = '',
 	
 YOGI = function(file) {
@@ -13,37 +14,6 @@ YOGI = function(file) {
 		me.setTitle(path.basename(file));
 		me.file = file;
 		
-		me.askItunes = function(fail) {
-			var url = encodeURIComponent(me.title),
-			searchItunes = {
-				host:'itunes.apple.com',
-				path:'/search?entity=song&term='+url
-			},
-			handleItunesResponse = function(response) {
-				var str = '';
-				out.log.debug('Asking itunes about ', me.title);
-				response.on('data', function (chunk) {
-					str += chunk;
-				});
-				response.on('end', function() {
-					var json = JSON.parse(str),
-						replies = json.resultCount;
-					if(replies == 0 && fail === undefined) {
-						me.askGoogle();
-					}else{
-						if(replies != 0) {
-							me.guesses = json.results;
-							me.handleMultiInfo();
-						}else {
-							out.log.debug('Could not locate info for ', me.file);
-							fs.appendFileSync('unable-locate-info.log', me.file);
-						}
-					}
-				});
-			};
-			http.request(searchItunes, handleItunesResponse).end();
-		};
-
 		me.askGoogle = function() {
 			var url = encodeURIComponent(me.title),
 				searchGoogle = {
@@ -143,7 +113,7 @@ YOGI = function(file) {
 					artwork.end();
 					cmdarg.push(wrapQuotes(me.artwork));
 					// TODO: check java capabilities
-					javaCmd = ['java', '-jar', jarFile].concat(cmdarg).join(' ');
+					javaCmd = ['java', '-jar', jarFile, 'update'].concat(cmdarg).join(' ');
 					out.log.debug('Executing:', javaCmd);
 					update = cmd(javaCmd);
 					update.on('close', function(u) {
@@ -155,25 +125,16 @@ YOGI = function(file) {
 
 
 	try {
-		me.askItunes();
-		/*if(true || process.argv.length < 3) {
-			// assume filename is the title of the song
-			me.askItunes();
-		}else {
-			// read the id3 for the title of the song
-			// if id3 does not have title info, fall back
-			// to filename as the title of the songs.
-			stream = fs.createReadStream(me.file);
-			new mm(stream).on('metadata', function (result) {
-				if(process.argv.length == 2) {
-					me.title = result.title || me.title;
-				}
-				me.album = result.album.replace(/^\s+|\s+$/g,'');
-			  	me.askItunes();
+		new itunes().search(me.title)
+			.results(function(a) {
+				me.guesses = a.results;
+				me.handleMultiInfo();
+			})
+			.noresults(function(a) {
+				out.log.debug('No results for ', me.title);
 			});
-		}*/
   	}catch(e) {
-  		out.log.debug('Error here', e);
+  		out.log.debug('some error:', e);
   	}
 };
 
