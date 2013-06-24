@@ -1,7 +1,6 @@
 var level = 'info'; // possible values: info/debug
 function log(){
-	var level = false,
-		args = [];
+	var args = [];
 	
 	if(!debug) {
 		//console.log('Absorbing...');

@@ -2,7 +2,8 @@ var http = require('http'),
 	out = require('./log4js');
 
 itunes = function() {
-	var results, noresults;
+	var results, noresults,
+		words;
 	this.search = function(title) {
 		//do search
 		var url = encodeURIComponent(title),
@@ -23,19 +24,29 @@ itunes = function() {
 					out.log.debug(title,'::',replies);
 					results(json);
 				}else{
-					noresults(json);
+					// try with fewer words.
+					// and give up with when
+					// less than 2 words with "noresults(last_tried_title)"
+					words = title.split(/\s/);
+					if(words.length >= 2) {
+						words.pop();
+						title = words.join(' ');
+						this.search(title);
+					}else {
+						noresults(title);
+					}
 				}
 			});
 		}).end();
 		return this;
-	}
+	};
 	this.results = function(fn) {
 		results = fn;
 		return this;
-	}
+	};
 	this.noresults = function(fn) {
 		noresults = fn;
 		return this;
-	}
-}
+	};
+};
 module.exports = itunes;

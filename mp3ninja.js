@@ -8,11 +8,37 @@ var cmd = require('child_process').exec,
 	out = require('./log4js'),
 	itunes = require('./itunes'),
 	artworkDir = '',
+
+/**
+ * Planned to use the following apis
+ * 1. https://itunes.apple.com/search?entity=song&term=dil+kya+kare
+ * 		#ref http://www.apple.com/itunes/affiliates/resources/documentation/itunes-store-web-service-search-api.html
+ * 2. http://developer.echonest.com/api/v4/song/search
+ * 		#ref http://developer.echonest.com/docs/v4/song.html#identify
+ * 3. Youtube api
+ * 		#https://developers.google.com/youtube/v3/docs/
+ **/
 	
 YOGI = function(file) {
 	var me = this;
-		me.setTitle(path.basename(file));
-		me.file = file;
+
+	me.setTitle(path.basename(file));
+	me.file = file;
+
+	function useTrackLen() {
+		var index = 0, i = 0, leastDiff, tolerance = 20000,
+			results = me.guesses;
+		for(; i<results.length; i++) {
+			leastDiff = Math.abs(me.duration - results[i].trackTimeMillis);
+			if(leastDiff < tolerance) {
+				tolerance = leastDiff;
+				out.log.debug('Probable candidate:', results[i].artistName, ' in ', results[i].releaseDate);
+				out.log.debug('Diff:', leastDiff);
+				index = i;
+			}
+		}
+		return index;
+	}
 		
 		me.askGoogle = function() {
 			var url = encodeURIComponent(me.title),
@@ -85,6 +111,7 @@ YOGI = function(file) {
 					}
 				}
 			}
+			index = useTrackLen();
 			cmdarg.push(wrapQuotes(me.guesses[index].trackName));
 			cmdarg.push(wrapQuotes(me.guesses[index].artistName));
 			cmdarg.push(wrapQuotes(me.guesses[index].collectionName.replace(/\s+?\(.*/, '')));
@@ -123,25 +150,30 @@ YOGI = function(file) {
 			}).end();
 		};
 
+	durCmd = 'java -jar ' + jarFile + ' duration "' + file + '"';
+	out.log.debug('Executing:', durCmd);
+	update = cmd(durCmd, function(err, out, stderr) {
+		me.duration = out;
 
-	try {
-		new itunes().search(me.title)
-			.results(function(a) {
-				me.guesses = a.results;
-				me.handleMultiInfo();
-			})
-			.noresults(function(a) {
-				out.log.debug('No results for ', me.title);
-			});
-  	}catch(e) {
-  		out.log.debug('some error:', e);
-  	}
+		try {
+			new itunes().search(me.title)
+				.results(function(a) {
+					me.guesses = a.results;
+					me.handleMultiInfo();
+				})
+				.noresults(function(a) {
+					out.log.debug('Tried last with ', a, ', originally, ', me.title);
+				});
+		}catch(e) {
+			out.log.debug('some error:', e);
+		}
+	});
 };
 
 YOGI.prototype.setTitle = function(title) {
 	// remove any preceding digits. usually songs do not start with numbers. 
 	// even though it did, smart search will resolve it.
-	title = title.replace(/^\d+\s/g, '');
+	title = title.replace(/^[0-9\s_]+/g, '');
 	// remove any dash separated string. usually its junk from different sites
 	// where the song has been downloaded from
 	title = title.replace(/\s?-\s+?(.*)/g, '');
